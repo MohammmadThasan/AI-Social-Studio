@@ -10,66 +10,62 @@
         darkMode: 'class',
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
             colors: {
-              gold: {
-                50: '#fffbeb',
-                100: '#fef3c7',
-                200: '#fde68a',
-                300: '#fcd34d',
-                400: '#fbbf24',
-                500: '#f59e0b',
-                600: '#d97706',
+              slate: {
+                850: '#151e2e', 
               }
             }
           }
         }
       }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg-color: #F8FAFC;
+        --dot-color: #cbd5e1;
+      }
+      .dark {
+        --bg-color: #020617;
+        --dot-color: #1e293b;
+      }
+
       body {
         font-family: 'Inter', sans-serif;
-        /* Sophisticated Mesh Gradient: Soft Blue top-left, Soft Gold bottom-right */
-        background-color: #f8fafc;
-        background-image: 
-          radial-gradient(at 0% 0%, hsla(215, 95%, 97%, 1) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, hsla(45, 90%, 96%, 1) 0px, transparent 50%),
-          radial-gradient(at 100% 0%, hsla(210, 80%, 98%, 1) 0px, transparent 50%);
-        background-attachment: fixed;
+        background-color: var(--bg-color);
+        /* Subtle dot pattern for texture without noise */
+        background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+        background-size: 32px 32px;
         min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         transition: background-color 0.3s ease;
       }
 
-      /* Dark Mode Overrides */
-      .dark body {
-        background-color: #0f172a; /* Slate 900 */
-        background-image: 
-          radial-gradient(at 0% 0%, hsla(215, 40%, 10%, 1) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, hsla(45, 20%, 10%, 1) 0px, transparent 50%),
-          radial-gradient(at 100% 0%, hsla(210, 40%, 15%, 1) 0px, transparent 50%);
-      }
-
-      /* Refined Scrollbar Aesthetics */
+      /* Minimal Scrollbar */
       ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
         background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; /* Slate 300 */
-        border-radius: 99px;
-        border: 2px solid transparent;
-        background-clip: content-box;
-        transition: background-color 0.2s ease;
+        background: #cbd5e1; 
+        border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #d97706; /* Gold 600 hover accent */
+        background: #94a3b8; 
       }
       
       .dark ::-webkit-scrollbar-thumb {
-        background: #334155; /* Slate 700 */
+        background: #334155; 
+      }
+      .dark ::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
       }
     </style>
   <script type="importmap">
@@ -85,7 +81,7 @@
 }
 </script>
 </head>
-  <body class="text-slate-900 dark:text-slate-100 antialiased selection:bg-gold-100 selection:text-gold-600">
+  <body class="text-slate-900 dark:text-slate-100 antialiased selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900/30 dark:selection:text-indigo-200">
     <div id="root"></div>
     <div id="fb-root"></div>
   </body>

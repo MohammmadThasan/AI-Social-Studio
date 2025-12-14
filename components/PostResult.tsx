@@ -6,8 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import { 
   Copy, Check, Share2, ExternalLink, Globe, Linkedin, Facebook, Download, 
   RefreshCw, Palette, Twitter, Instagram, Smartphone, Loader2, LogIn, 
-  ChevronDown, Settings, BookOpen, Sparkles, Zap, AlertTriangle, MonitorPlay,
-  User, ThumbsUp, MessageSquare, Repeat, Send, Bookmark, MoreHorizontal, Heart
+  ChevronDown, Settings, BookOpen, Sparkles, Zap, MonitorPlay,
+  User, ThumbsUp, MessageSquare, Repeat, Send, Bookmark, MoreHorizontal, Heart, AlertCircle
 } from 'lucide-react';
 
 interface PostResultProps {
@@ -297,19 +297,19 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
 
   const MockProfileHeader = ({ platform }: { platform: Platform }) => (
     <div className="flex items-center gap-3 mb-4">
-       <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center border border-slate-300 dark:border-slate-600">
-         <User className="w-6 h-6 text-slate-400" />
+       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600">
+         <User className="w-5 h-5 text-slate-400" />
        </div>
        <div className="flex flex-col leading-tight">
-         <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1">
-            Your Name <span className="text-slate-400 font-normal">@handle</span>
+         <span className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-1">
+            Your Name
          </span>
-         <span className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-           Just now • <Globe className="w-3 h-3" />
+         <span className="text-xs text-slate-500 flex items-center gap-1">
+           Now • <Globe className="w-3 h-3" />
          </span>
        </div>
-       <div className="ml-auto opacity-50">
-          <MoreHorizontal className="w-5 h-5 text-slate-400" />
+       <div className="ml-auto opacity-40 hover:opacity-100 cursor-pointer">
+          <MoreHorizontal className="w-5 h-5 text-slate-500" />
        </div>
     </div>
   );
@@ -317,54 +317,34 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
   const MockEngagement = ({ platform }: { platform: Platform }) => {
       if (platform === 'LinkedIn') {
         return (
-            <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-4 text-slate-500 text-sm font-semibold">
-                    <div className="flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
+            <div className="mt-6 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-6 text-slate-500 text-sm font-medium">
+                    <div className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 px-2 py-1 -ml-2 rounded cursor-pointer transition-colors">
                         <ThumbsUp className="w-4 h-4 transform -scale-x-100" /> Like
                     </div>
-                    <div className="flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
+                    <div className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
                         <MessageSquare className="w-4 h-4" /> Comment
                     </div>
-                    <div className="flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
+                    <div className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
                         <Repeat className="w-4 h-4" /> Repost
                     </div>
-                    <div className="flex items-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
+                    <div className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors">
                         <Send className="w-4 h-4" /> Send
                     </div>
                 </div>
             </div>
         );
       }
-      if (platform === 'X (Twitter)') {
-        return (
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between text-slate-500 text-xs sm:text-sm px-2">
-                <MessageSquare className="w-4 h-4 hover:text-blue-500 cursor-pointer" />
-                <Repeat className="w-4 h-4 hover:text-green-500 cursor-pointer" />
-                <Heart className="w-4 h-4 hover:text-red-500 cursor-pointer" />
-                <Bookmark className="w-4 h-4 hover:text-blue-500 cursor-pointer" />
-                <Share2 className="w-4 h-4 hover:text-blue-500 cursor-pointer" />
-            </div>
-        );
-      }
-      return (
-        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-slate-500 text-sm">
-             <div className="flex items-center gap-4">
-                 <Heart className="w-5 h-5 cursor-pointer hover:text-red-500" />
-                 <MessageSquare className="w-5 h-5 cursor-pointer hover:text-indigo-500" />
-                 <Send className="w-5 h-5 cursor-pointer hover:text-indigo-500" />
-             </div>
-             <Bookmark className="w-5 h-5 cursor-pointer hover:text-amber-500" />
-        </div>
-      );
+      return null;
   };
 
   const ImageSection = () => (
-      <div className="mt-4 mb-2 group relative">
-        <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 flex justify-center items-center min-h-[200px] relative">
+      <div className="mt-5 mb-2 group relative">
+        <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-center items-center min-h-[200px] relative">
             {isRegeneratingImage && (
-                <div className="absolute inset-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-[2px] flex flex-col items-center justify-center">
-                    <RefreshCw className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin mb-2" />
-                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-200 uppercase tracking-wide">Redesigning...</span>
+                <div className="absolute inset-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center">
+                    <RefreshCw className="w-6 h-6 text-indigo-600 dark:text-indigo-400 animate-spin mb-2" />
+                    <span className="text-xs font-semibold text-indigo-900 dark:text-indigo-200">Refining visual...</span>
                 </div>
             )}
             
@@ -374,29 +354,25 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                 className="w-full h-auto object-cover max-h-[500px]"
             />
             
-            {/* Hover Actions */}
-            <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                  <button 
                     onClick={handleDownloadImage}
-                    className="bg-black/60 backdrop-blur-md text-white p-2 rounded-lg hover:bg-black/80 transition-colors"
-                    title="Download High-Res"
+                    className="bg-black/70 backdrop-blur text-white p-2 rounded-lg hover:bg-black/90 transition-colors shadow-sm"
+                    title="Download"
                 >
                     <Download className="w-4 h-4" />
                 </button>
             </div>
-            <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity">
-               <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider">AI Generated</span>
-            </div>
         </div>
 
-        {/* Style Controls (Subtle) */}
+        {/* Style Controls */}
         <div className="mt-2 flex items-center justify-between px-1">
              <div className="flex items-center gap-2">
                  <Palette className="w-3.5 h-3.5 text-slate-400" />
                  <select 
                     value={selectedStyle}
                     onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
-                    className="bg-transparent border-none text-xs text-slate-500 dark:text-slate-400 focus:ring-0 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 py-0 pl-0 pr-6 font-medium"
+                    className="bg-transparent border-none text-xs text-slate-600 dark:text-slate-400 focus:ring-0 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 py-0 pl-0 pr-6 font-medium"
                     disabled={isRegeneratingImage}
                   >
                     {IMAGE_STYLES.map(style => (
@@ -420,34 +396,14 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
   // Loading State
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-none p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px] transition-colors duration-300 border dark:border-slate-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-transparent dark:from-indigo-900/10 pointer-events-none" />
-        <div className="relative mb-8">
-           <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center relative z-10 mx-auto">
-             <Sparkles className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-pulse" />
-           </div>
-           <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/20 rounded-full animate-ping opacity-20 duration-1000"></div>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px] relative overflow-hidden">
+        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
+           <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
         </div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Crafting your post</h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-8">
-            Analyzing trends for <strong>{formData.topic}</strong> and designing visual assets...
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Generating Content</h3>
+        <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto text-sm leading-relaxed">
+           Analyzing <strong>{formData.topic}</strong> trends and drafting your post...
         </p>
-        <div className="flex flex-col space-y-3 text-sm text-slate-600 dark:text-slate-400 w-full max-w-xs">
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-             <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-               <Check className="w-3 h-3" />
-             </div>
-             <span>Searching latest papers & news</span>
-          </div>
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 animate-pulse delay-75">
-             <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
-             <span>Drafting {formData.platform} copy</span>
-          </div>
-          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 opacity-50">
-             <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600"></div>
-             <span>Generating responsive image</span>
-          </div>
-        </div>
       </div>
     );
   }
@@ -455,13 +411,13 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
   // Error State
   if (error) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-none p-8 h-full flex flex-col items-center justify-center text-center min-h-[500px] transition-colors duration-300 border dark:border-slate-700">
-        <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4 text-red-500 dark:text-red-400">
-          <Smartphone className="w-8 h-8" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[500px]">
+        <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-4 text-red-500 dark:text-red-400">
+          <AlertCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Generation Paused</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm">{error}</p>
-        <button onClick={() => window.location.reload()} className="mt-6 text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Generation Paused</h3>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm text-sm">{error}</p>
+        <button onClick={() => window.location.reload()} className="mt-6 text-indigo-600 dark:text-indigo-400 font-medium hover:underline text-sm">
           Try refreshing
         </button>
       </div>
@@ -471,20 +427,13 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
   // Empty State
   if (!post) {
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-none border-0 p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px] transition-colors duration-300 dark:border dark:border-slate-700 group">
-        <div className="relative mb-8 transition-transform duration-500 group-hover:scale-105">
-           <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-violet-200 dark:from-indigo-900/40 dark:to-violet-900/40 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
-           <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-100 dark:border-slate-600 flex items-center justify-center relative z-10 transform -rotate-6 group-hover:rotate-0 transition-transform">
-             <Sparkles className="w-12 h-12 text-indigo-500 dark:text-indigo-400" />
-           </div>
-           <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-600 flex items-center justify-center absolute -bottom-4 -right-4 z-20 transform rotate-12 group-hover:rotate-6 transition-transform">
-             <Share2 className="w-8 h-8 text-violet-500 dark:text-violet-400" />
-           </div>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px]">
+        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
+             <Sparkles className="w-10 h-10 text-slate-300 dark:text-slate-600" />
         </div>
-        
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Ready to Create</h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-          Select a topic on the left to start. AI will research the web, write your post, and design a custom image in seconds.
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Ready to Create</h3>
+        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
+          Select a topic to start. AI will research the web, write your post, and design a custom image.
         </p>
       </div>
     );
@@ -495,16 +444,16 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
     switch (formData.platform) {
       case 'LinkedIn':
         return (
-          <button onClick={() => handleSmartShare('LinkedIn')} className="flex-1 bg-[#0a66c2] hover:bg-[#004182] text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm">
+          <button onClick={() => handleSmartShare('LinkedIn')} className="bg-[#0a66c2] hover:bg-[#004182] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
             <Linkedin className="w-4 h-4" />
-            <span>Post to LinkedIn</span>
+            <span>Post</span>
           </button>
         );
       case 'X (Twitter)':
         return (
-          <button onClick={() => handleSmartShare('X (Twitter)')} className="flex-1 bg-black dark:bg-slate-950 hover:bg-gray-800 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm border border-transparent dark:border-slate-700 text-sm">
+          <button onClick={() => handleSmartShare('X (Twitter)')} className="bg-black dark:bg-slate-950 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
             <Twitter className="w-4 h-4" />
-            <span>Post to X</span>
+            <span>Post</span>
           </button>
         );
       case 'Facebook':
@@ -513,36 +462,34 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
               <button 
                 onClick={handleDirectFacebookPublish}
                 disabled={isPublishingFb}
-                className="flex-1 bg-[#0866ff] hover:bg-[#004ddb] text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm"
+                className="bg-[#0866ff] hover:bg-[#004ddb] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm"
               >
                 {isPublishingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                <span>Publish to {selectedFbPage.name}</span>
+                <span>Publish</span>
               </button>
            );
         }
         return (
-          <div className="flex-1 flex gap-2">
-             <button onClick={() => handleSmartShare('Facebook')} className="flex-1 bg-[#0866ff] text-white hover:bg-[#0054d1] px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm">
+             <button onClick={() => handleSmartShare('Facebook')} className="bg-[#0866ff] text-white hover:bg-[#0054d1] px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
                <Facebook className="w-4 h-4" />
-               <span>Copy & Open (Manual)</span>
+               <span>Copy</span>
              </button>
-          </div>
         );
       case 'Medium':
         return (
-          <button onClick={() => handleSmartShare('Medium')} className="flex-1 bg-black dark:bg-slate-950 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm border border-transparent dark:border-slate-700 text-sm">
+          <button onClick={() => handleSmartShare('Medium')} className="bg-black dark:bg-slate-950 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
             <BookOpen className="w-4 h-4" />
-            <span>Open Medium</span>
+            <span>Open</span>
           </button>
         );
       case 'Instagram':
         return (
           <button 
             onClick={() => handleSmartShare('Instagram')}
-            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all shadow-sm text-sm"
           >
             <Instagram className="w-4 h-4" />
-            <span>Share to Instagram</span>
+            <span>Share</span>
           </button>
         );
     }
@@ -567,7 +514,7 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
       }
   
       return (
-        <div className="mt-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3">
+        <div className="mt-3 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-lg p-3">
           <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-3">
             <Settings className="w-3.5 h-3.5 text-slate-400" />
             Facebook Automation
@@ -583,7 +530,7 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
               {!fbUser ? (
                 <div className="space-y-2">
                    {needsAppId && (
-                     <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-700">
+                     <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-700">
                         <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">App ID</label>
                         <input 
                           type="text" 
@@ -617,7 +564,7 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                   </div>
                   <div className="relative">
                      <select 
-                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-6 text-xs text-slate-700 dark:text-slate-300"
+                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-6 text-xs text-slate-700 dark:text-slate-300"
                        value={selectedFbPage?.id || ''}
                        onChange={(e) => setSelectedFbPage(fbPages.find(p => p.id === e.target.value) || null)}
                      >
@@ -635,16 +582,16 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
     };
 
   return (
-    <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-none flex flex-col h-full overflow-hidden transition-colors duration-300 border dark:border-slate-700">
+    <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden transition-colors duration-300">
       
       {/* Toast Notification */}
       {shareMessage && (
         <div className="absolute top-4 left-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
-           <div className="mx-auto max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3">
+           <div className="mx-auto max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
              <div className="bg-emerald-500 rounded-full p-1 flex-shrink-0">
                <Check className="w-3 h-3 text-white" />
              </div>
-             <p className="font-semibold text-sm">{shareMessage}</p>
+             <p className="font-medium text-sm">{shareMessage}</p>
            </div>
         </div>
       )}
@@ -653,71 +600,65 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
       <div className="flex flex-col h-full">
         
         {/* Top Bar with Actions */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 z-10 flex flex-col gap-3">
-           <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold">
-                 <PlatformIcon platform={formData.platform} />
-                 <span>Result</span>
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 z-10 flex items-center justify-between">
+           <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300">
+                <PlatformIcon platform={formData.platform} />
               </div>
-              <div className="flex items-center gap-2">
-                 <button onClick={handleCopy} className={`p-2 rounded-lg border transition-all ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'hover:bg-slate-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-500'}`} title="Copy Text">
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                 </button>
+              <div>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Generated Result</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Ready to publish</p>
               </div>
            </div>
            
-           <div className="flex gap-2">
+           <div className="flex items-center gap-2">
+              <button onClick={handleCopy} className={`p-2 rounded-lg border transition-all ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`} title="Copy Text">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
               {renderPrimaryAction()}
            </div>
-           {renderFacebookConfig()}
         </div>
 
         {/* Scrollable Preview Area */}
-        <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/30 p-6 md:p-8">
            
-           {/* Research Context Banner */}
+           {/* Research Context Callout - Clean, Professional */}
            {post.researchSummary && (
-              <div className="mb-6 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl p-4 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <Sparkles className="w-16 h-16" />
+              <div className="mb-6 flex items-start gap-4 p-4 bg-white dark:bg-slate-900 border-l-4 border-indigo-500 rounded-r-lg shadow-sm">
+                 <div className="pt-0.5">
+                    <Zap className="w-4 h-4 text-indigo-500" />
                  </div>
-                 <div className="flex items-start gap-3 relative z-10">
-                    <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-                       <Zap className="w-4 h-4 text-white" />
+                 <div>
+                    <div className="flex items-center gap-2 mb-1">
+                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Research Insight</span>
+                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          {post.contentAngle}
+                       </span>
                     </div>
-                    <div>
-                       <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-100 mb-1">Research Insight</h4>
-                       <p className="text-sm font-medium leading-relaxed opacity-95">"{post.researchSummary}"</p>
-                       <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[10px] bg-black/20 px-2 py-0.5 rounded-full text-white/90 font-mono">Angle: {post.contentAngle}</span>
-                       </div>
-                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                       {post.researchSummary}
+                    </p>
                  </div>
               </div>
            )}
 
            {/* Social Post Preview Card */}
-           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 md:p-6 transition-colors duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 md:p-8 transition-colors duration-300 max-w-3xl mx-auto">
               
               <MockProfileHeader platform={formData.platform} />
               
-              {/* Content Body */}
-              <div className={`prose prose-sm prose-slate dark:prose-invert max-w-none mb-4 ${formData.platform === 'X (Twitter)' ? 'whitespace-pre-wrap font-sans' : ''}`}>
-                 <ReactMarkdown
-                    components={{
-                        p: ({children}) => <p className="mb-3 leading-relaxed text-[15px]">{children}</p>,
-                        ul: ({children}) => <ul className="list-disc pl-4 mb-3 space-y-1">{children}</ul>,
-                        ol: ({children}) => <ol className="list-decimal pl-4 mb-3 space-y-1">{children}</ol>,
-                        h1: ({children}) => <strong className="block text-lg mb-2">{children}</strong>,
-                        h2: ({children}) => <strong className="block text-base mb-2">{children}</strong>,
-                        a: ({children}) => <span className="text-[#0a66c2] dark:text-[#378fe9] cursor-pointer hover:underline">{children}</span>
-                    }}
-                 >
+              {/* Content Body - Refined Typography */}
+              <div className={`prose prose-slate dark:prose-invert max-w-none mb-6 
+                  prose-p:text-[15px] prose-p:leading-7 prose-p:text-slate-700 dark:prose-p:text-slate-300 
+                  prose-headings:font-semibold prose-headings:text-slate-900 dark:prose-headings:text-white
+                  prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
+                  ${formData.platform === 'X (Twitter)' ? 'whitespace-pre-wrap font-sans' : ''}`}>
+                 <ReactMarkdown>
                     {post.content}
                  </ReactMarkdown>
               </div>
 
-              {/* Image Integration - Position based on platform conventions roughly */}
+              {/* Image Integration */}
               {post.imageUrl && (
                  <ImageSection />
               )}
@@ -728,27 +669,29 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
 
            {/* Sources List */}
            {post.sources.length > 0 && (
-              <div className="mt-6">
-                 <div className="flex items-center justify-between mb-2 px-1">
-                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                       <Globe className="w-3 h-3" /> Sources
+              <div className="mt-8 max-w-3xl mx-auto">
+                 <div className="flex items-center justify-between mb-3 px-1">
+                    <h5 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                       <Globe className="w-3.5 h-3.5" /> Sources Cited
                     </h5>
-                    <button onClick={handleCopySources} className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                    <button onClick={handleCopySources} className="text-xs font-medium text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 transition-colors">
                        {sourcesCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                        {sourcesCopied ? 'Copied' : 'Copy All'}
                     </button>
                  </div>
-                 <div className="grid grid-cols-1 gap-2">
+                 <div className="space-y-2">
                     {post.sources.map((source, idx) => (
                        <a 
                          key={idx}
                          href={source.uri}
                          target="_blank"
                          rel="noopener noreferrer" 
-                         className="flex items-center justify-between bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors group"
+                         className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all group"
                        >
-                          <span className="text-xs text-slate-600 dark:text-slate-300 truncate pr-2 flex-1">{source.title || source.uri}</span>
-                          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-indigo-500 flex-shrink-0" />
+                          <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded text-slate-400 group-hover:text-indigo-500 transition-colors">
+                             <ExternalLink className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-sm text-slate-600 dark:text-slate-300 truncate flex-1 font-medium">{source.title || source.uri}</span>
                        </a>
                     ))}
                  </div>
@@ -756,6 +699,13 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
            )}
 
         </div>
+        
+        {/* Settings Panel Footer (Facebook) */}
+        {renderFacebookConfig() && (
+           <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+              {renderFacebookConfig()}
+           </div>
+        )}
       </div>
     </div>
   );

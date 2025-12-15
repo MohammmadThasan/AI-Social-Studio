@@ -22,8 +22,8 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
 
   switch (platform) {
     case 'X (Twitter)':
-      platformConstraint = 'Strictly 1-3 tweets length (under 280 chars per thought). Thread style is okay if needed, but keep it concise.';
-      platformStyle = 'Short, punchy, low context-switching. Use arrows (->) or distinct line breaks.';
+      platformConstraint = 'Strictly under 280 characters TOTAL. Single tweet only. NO THREADS.';
+      platformStyle = 'Viral one-liner. High impact. No fluff. Use arrows (->) for causality.';
       break;
     case 'Instagram':
       platformConstraint = 'Keep it under 150 words. Focus on the visual hook.';

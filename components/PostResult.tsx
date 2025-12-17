@@ -11,7 +11,7 @@ import {
   ChevronDown, Settings, BookOpen, Sparkles, Zap, MonitorPlay,
   User, ThumbsUp, MessageSquare, Repeat, Send, MoreHorizontal, AlertCircle,
   RectangleHorizontal, RectangleVertical, Square, Sliders, Type, Search, Info,
-  Code, Users, Briefcase, Layers
+  Code, Users, Briefcase, Layers, Calendar, Clock, Upload, Cuboid as Cube
 } from 'lucide-react';
 
 interface PostResultProps {
@@ -23,7 +23,17 @@ interface PostResultProps {
   onContentUpdate: (content: string) => void;
 }
 
-const IMAGE_STYLES: ImageStyle[] = ['Minimalist', 'Photorealistic', 'Abstract', 'Cyberpunk', 'Corporate', 'Watercolor'];
+const IMAGE_STYLES: ImageStyle[] = ['3D Render', 'Photorealistic', 'Minimalist', 'Abstract', 'Cyberpunk', 'Corporate'];
+
+const STYLE_PREVIEWS: Record<ImageStyle, string> = {
+  '3D Render': 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500',
+  'Minimalist': 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
+  'Photorealistic': 'bg-gradient-to-br from-slate-700 to-black',
+  'Abstract': 'bg-gradient-to-tr from-amber-200 via-violet-600 to-sky-900',
+  'Cyberpunk': 'bg-slate-900 border border-cyan-500/50 shadow-[inset_0_0_10px_rgba(6,182,212,0.2)]',
+  'Corporate': 'bg-gradient-to-br from-blue-900 to-slate-900',
+  'Watercolor': 'bg-gradient-to-br from-sky-300 via-rose-300 to-lime-300',
+};
 
 // --- Character Counter Component ---
 const CharacterCounter: React.FC<{ text: string; platform: Platform }> = ({ text, platform }) => {
@@ -34,13 +44,10 @@ const CharacterCounter: React.FC<{ text: string; platform: Platform }> = ({ text
   const isTooShort = count < specs.sweetSpot[0];
   const isTooLong = count > specs.sweetSpot[1] && !isOverMax;
 
-  // Calculate percentage for progress bar (capped at 100% or slightly over for visual effect)
-  // For platforms with huge limits (Facebook), we use a visual max of 500 for the bar to keep it readable, 
-  // unless the text is actually huge.
   const visualMax = platform === 'Facebook' ? Math.max(200, count + 50) : specs.max;
   const percent = Math.min(100, (count / visualMax) * 100);
 
-  let statusColor = 'bg-slate-200 dark:bg-slate-700'; // Default
+  let statusColor = 'bg-slate-200 dark:bg-slate-700'; 
   let textColor = 'text-slate-500';
   let statusText = '';
   let icon = <Info className="w-3 h-3" />;
@@ -75,15 +82,11 @@ const CharacterCounter: React.FC<{ text: string; platform: Platform }> = ({ text
         </span>
       </div>
       
-      {/* Progress Bar Container */}
       <div className="relative w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-        {/* The Bar */}
         <div 
           className={`h-full transition-all duration-500 ease-out rounded-full ${statusColor}`} 
           style={{ width: `${percent}%` }}
         />
-        
-        {/* Markers for Sweet Spot (if scale permits) */}
         {specs.sweetSpot[0] > 0 && (
            <div 
              className="absolute top-0 bottom-0 w-0.5 bg-black/10 dark:bg-white/10" 
@@ -118,9 +121,13 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
   const [sourcesCopied, setSourcesCopied] = useState(false);
   const [isRegeneratingImage, setIsRegeneratingImage] = useState(false);
   const [isRewriting, setIsRewriting] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('Minimalist');
+  const [selectedStyle, setSelectedStyle] = useState<ImageStyle>('3D Render');
   const [shareMessage, setShareMessage] = useState<string | null>(null);
 
+  // Scheduling State
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  
   // Image Generation Settings
   const [aspectRatio, setAspectRatio] = useState<string>('16:9');
   const [customPrompt, setCustomPrompt] = useState<string>('');
@@ -186,7 +193,6 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                 const pages = await getFacebookPages(user.id);
                 setFbPages(pages);
                 
-                // Restore selected page from localStorage or default to first
                 const storedPageId = localStorage.getItem('fb_selected_page_id');
                 const targetPage = pages.find(p => p.id === storedPageId) || (pages.length > 0 ? pages[0] : null);
                 if (targetPage) setSelectedFbPage(targetPage);
@@ -243,7 +249,6 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
       const pages = await getFacebookPages(user.id);
       setFbPages(pages);
       
-      // Restore selected page from localStorage or default to first
       const storedPageId = localStorage.getItem('fb_selected_page_id');
       const targetPage = pages.find(p => p.id === storedPageId) || (pages.length > 0 ? pages[0] : null);
       if (targetPage) {
@@ -268,36 +273,35 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
     setIsPublishingFb(true);
     setFbError(null);
     setFbPublishSuccess(null);
+    setShareMessage(`Publishing to ${selectedFbPage.name}...`);
 
     try {
       await publishToFacebookPage(selectedFbPage.id, selectedFbPage.access_token, post.content, post.imageUrl);
       setFbPublishSuccess(`Successfully posted to ${selectedFbPage.name}!`);
+      setShareMessage('Published successfully!');
+      setTimeout(() => setShareMessage(null), 4000);
     } catch (err: any) {
       console.error(err);
       setFbError(err.message || "Failed to publish to Facebook Page.");
+      setShareMessage('Publish failed.');
+      setTimeout(() => setShareMessage(null), 3000);
     } finally {
       setIsPublishingFb(false);
     }
   };
 
   const copyToClipboard = async (text: string) => {
-    // Attempt 1: Modern API
-    // We try this first. If it fails (e.g. permission denied in iframe), we silently fall back.
     if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
         return true;
       } catch (err) {
-        // Suppress error here to avoid console noise in dev environments
       }
     }
 
-    // Attempt 2: Fallback (execCommand)
     try {
       const textArea = document.createElement("textarea");
       textArea.value = text;
-      
-      // Prevent scrolling to bottom of page in MS Edge.
       textArea.style.position = "fixed";
       textArea.style.top = "0";
       textArea.style.left = "0";
@@ -308,22 +312,17 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
       textArea.style.outline = "none";
       textArea.style.boxShadow = "none";
       textArea.style.background = "transparent";
-      // Avoid flash of white box
       textArea.style.opacity = "0";
-      
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-
       let success = false;
       try {
         success = document.execCommand('copy');
       } catch (err) {
         console.warn('Fallback: Unable to copy', err);
       }
-
       document.body.removeChild(textArea);
-      
       if (!success) {
         console.error("Clipboard copy failed (both methods).");
       }
@@ -365,6 +364,25 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
       document.body.removeChild(link);
     }
   };
+  
+  const handleManualPost = async () => {
+    if (!post) return;
+    
+    // 1. Copy Text
+    await copyToClipboard(post.content);
+    
+    // 2. Download Image
+    if (post.imageUrl) {
+        handleDownloadImage();
+    }
+
+    // 3. Feedback
+    setShareMessage('Text copied & Image saved for manual posting!');
+    setTimeout(() => setShareMessage(null), 5000);
+    
+    // 4. Open Facebook
+    window.open('https://facebook.com', '_blank');
+  };
 
   const handleRegenerateImage = async () => {
     if (!post || isRegeneratingImage) return;
@@ -396,6 +414,23 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
 
   const handleSmartShare = async (targetPlatform: Platform) => {
     if (!post) return;
+
+    // Facebook Auto-Post Logic
+    if (targetPlatform === 'Facebook' && !useManualFb) {
+         if (!fbUser) {
+             setShareMessage('Connecting to Facebook...');
+             await handleFacebookLogin();
+             return;
+         }
+         if (!selectedFbPage) {
+             setShareMessage("Please select a Page below.");
+             setTimeout(() => setShareMessage(null), 3000);
+             return;
+         }
+         await handleDirectFacebookPublish();
+         return;
+    }
+
     setShareMessage('Preparing post...');
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -440,6 +475,23 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
     let message = 'Text copied & Image saved!';
     setShareMessage(message);
     setTimeout(() => setShareMessage(null), 6000);
+  };
+  
+  const handleConfirmSchedule = () => {
+    if (!scheduleDate) return;
+    const selected = new Date(scheduleDate);
+    const now = new Date();
+    if (selected <= now) {
+      setShareMessage('Please select a future date and time.');
+      setTimeout(() => setShareMessage(null), 3000);
+      return;
+    }
+    const formattedDate = selected.toLocaleString('en-US', { 
+      weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' 
+    });
+    setShareMessage(`Post scheduled for ${formattedDate}`);
+    setShowSchedule(false);
+    setTimeout(() => setShareMessage(null), 5000);
   };
 
   // Mock Components for Preview
@@ -506,13 +558,11 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                     <span className="text-xs font-semibold text-indigo-900 dark:text-indigo-200">Refining visual...</span>
                 </div>
             )}
-            
             <img 
                 src={post!.imageUrl} 
                 alt="Generated AI Art" 
                 className="w-full h-auto object-cover max-h-[500px]"
             />
-            
             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                  <button 
                     onClick={handleDownloadImage}
@@ -524,44 +574,54 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
             </div>
         </div>
 
-        {/* Style & Image Controls */}
         <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-           
            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Image Settings</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Image Studio</span>
               <button 
                 onClick={() => setShowImageSettings(!showImageSettings)}
                 className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
               >
-                {showImageSettings ? 'Hide Options' : 'Customize'}
+                {showImageSettings ? 'Hide Prompt' : 'Custom Prompt'}
                 <Sliders className="w-3 h-3" />
               </button>
            </div>
-
-           <div className="flex flex-wrap items-end gap-3 justify-between">
-             <div className="flex items-center gap-4 flex-wrap">
-                 {/* Style Selector */}
+           <div className="mb-4">
+              <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-2 font-medium">Visual Style</label>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                 {IMAGE_STYLES.map(style => (
+                    <button
+                        key={style}
+                        onClick={() => setSelectedStyle(style)}
+                        disabled={isRegeneratingImage}
+                        className={`group relative flex flex-col gap-1.5 p-1.5 rounded-lg transition-all text-left ${
+                            selectedStyle === style 
+                                ? 'bg-white dark:bg-slate-800 shadow-sm ring-1 ring-indigo-500/50' 
+                                : 'hover:bg-white/50 dark:hover:bg-slate-800/50'
+                        }`}
+                    >
+                        <div className={`w-full aspect-[4/3] sm:aspect-square rounded-md overflow-hidden ${STYLE_PREVIEWS[style]} relative`}>
+                             {style === 'Cyberpunk' && <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-cyan-900/50 to-transparent" />}
+                             {style === '3D Render' && <div className="absolute inset-0 flex items-center justify-center"><Cube className="w-5 h-5 text-white animate-pulse" /></div>}
+                             {style === 'Minimalist' && <div className="absolute inset-0 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" /></div>}
+                            {selectedStyle === style && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                                    <div className="bg-white dark:bg-slate-900 rounded-full p-0.5 shadow-sm">
+                                        <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <span className={`text-[9px] font-medium truncate w-full text-center ${selectedStyle === style ? 'text-indigo-600 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                            {style}
+                        </span>
+                    </button>
+                 ))}
+              </div>
+           </div>
+           <div className="flex flex-col sm:flex-row sm:items-end gap-3 justify-between border-t border-slate-200 dark:border-slate-700 pt-4">
                  <div>
-                   <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">Style</label>
-                   <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5">
-                      <Palette className="w-3.5 h-3.5 text-slate-400" />
-                      <select 
-                          value={selectedStyle}
-                          onChange={(e) => setSelectedStyle(e.target.value as ImageStyle)}
-                          className="bg-transparent border-none text-xs text-slate-700 dark:text-slate-300 focus:ring-0 cursor-pointer p-0 font-medium w-24"
-                          disabled={isRegeneratingImage}
-                        >
-                          {IMAGE_STYLES.map(style => (
-                            <option key={style} value={style} className="dark:bg-slate-800">{style}</option>
-                          ))}
-                        </select>
-                   </div>
-                 </div>
-
-                 {/* Aspect Ratio Buttons */}
-                 <div>
-                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1">Aspect Ratio</label>
-                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-0.5">
+                    <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 font-medium">Dimensions</label>
+                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-0.5 inline-flex">
                        <button 
                          onClick={() => setAspectRatio('1:1')}
                          className={`p-1.5 rounded ${aspectRatio === '1:1' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
@@ -599,19 +659,15 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                        </button>
                     </div>
                  </div>
-             </div>
-
              <button
                 onClick={handleRegenerateImage}
                 disabled={isRegeneratingImage}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
              >
-                <RefreshCw className={`w-3 h-3 ${isRegeneratingImage ? 'animate-spin' : ''}`} />
-                Regenerate
+                <RefreshCw className={`w-3.5 h-3.5 ${isRegeneratingImage ? 'animate-spin' : ''}`} />
+                Generate New Version
              </button>
            </div>
-           
-           {/* Collapsible Custom Prompt */}
            {showImageSettings && (
              <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-1 duration-200">
                 <label className="block text-[10px] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
@@ -626,383 +682,325 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
                 />
              </div>
            )}
-
         </div>
       </div>
   );
 
-
-  // Loading State
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px] relative overflow-hidden">
-        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
-           <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-spin" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-12 flex flex-col items-center justify-center text-center h-[600px] transition-colors duration-300">
+        <div className="relative">
+           <div className="w-16 h-16 rounded-full border-4 border-slate-100 dark:border-slate-800 border-t-indigo-600 animate-spin"></div>
+           <div className="absolute inset-0 flex items-center justify-center">
+             <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-500 animate-pulse" />
+           </div>
         </div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Generating Content</h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto text-sm leading-relaxed">
-           Analyzing <strong>{formData.topic}</strong> trends and drafting your post...
+        <h3 className="mt-6 text-xl font-bold text-slate-900 dark:text-white">Crafting your post...</h3>
+        <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-sm">
+          Analyzing {formData.topic} trends, researching data points, and optimizing for {formData.platform}.
         </p>
       </div>
     );
   }
 
-  // Error State
   if (error) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[500px]">
-        <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-4 text-red-500 dark:text-red-400">
-          <AlertCircle className="w-6 h-6" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-red-200 dark:border-red-900/50 p-8 text-center flex flex-col items-center justify-center h-[400px]">
+        <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className="w-6 h-6 text-red-500" />
         </div>
-        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Generation Paused</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-sm text-sm">{error}</p>
-        <button onClick={() => window.location.reload()} className="mt-6 text-indigo-600 dark:text-indigo-400 font-medium hover:underline text-sm">
-          Try refreshing
-        </button>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Generation Failed</h3>
+        <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-sm">{error}</p>
       </div>
     );
   }
 
-  // Empty State
   if (!post) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 h-full flex flex-col items-center justify-center text-center min-h-[600px]">
-        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
-             <Sparkles className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-12 flex flex-col items-center justify-center text-center h-[600px] transition-colors duration-300">
+        <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 shadow-inner rotate-3 transition-transform hover:rotate-6">
+           <Zap className="w-10 h-10 text-slate-300 dark:text-slate-600" />
         </div>
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Ready to Create</h3>
-        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto text-sm leading-relaxed">
-          Select a topic to start. AI will research the web, write your post, and design a custom image.
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Ready to create?</h3>
+        <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-sm">
+          Select your platform and topic on the left to generate high-engagement social media content powered by Gemini.
         </p>
       </div>
     );
   }
 
-  // Action Button Rendering (Top)
-  const renderPrimaryAction = () => {
-    switch (formData.platform) {
-      case 'LinkedIn':
-        return (
-          <button onClick={() => handleSmartShare('LinkedIn')} className="bg-[#0a66c2] hover:bg-[#004182] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
-            <Linkedin className="w-4 h-4" />
-            <span>Post</span>
-          </button>
-        );
-      case 'X (Twitter)':
-        return (
-          <button onClick={() => handleSmartShare('X (Twitter)')} className="bg-black dark:bg-slate-950 hover:bg-gray-800 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
-            <Twitter className="w-4 h-4" />
-            <span>Post</span>
-          </button>
-        );
-      case 'Facebook':
-        if (fbUser && selectedFbPage && !useManualFb) {
-           return (
-              <button 
-                onClick={handleDirectFacebookPublish}
-                disabled={isPublishingFb}
-                className="bg-[#0866ff] hover:bg-[#004ddb] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm"
-              >
-                {isPublishingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
-                <span>Publish</span>
-              </button>
-           );
-        }
-        return (
-             <button onClick={() => handleSmartShare('Facebook')} className="bg-[#0866ff] text-white hover:bg-[#0054d1] px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
-               <Facebook className="w-4 h-4" />
-               <span>Copy</span>
-             </button>
-        );
-      case 'Medium':
-        return (
-          <button onClick={() => handleSmartShare('Medium')} className="bg-black dark:bg-slate-950 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm text-sm">
-            <BookOpen className="w-4 h-4" />
-            <span>Open</span>
-          </button>
-        );
-      case 'Instagram':
-        return (
-          <button 
-            onClick={() => handleSmartShare('Instagram')}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all shadow-sm text-sm"
-          >
-            <Instagram className="w-4 h-4" />
-            <span>Share</span>
-          </button>
-        );
-    }
-  };
-  
-  // Facebook Config Panel
-  const renderFacebookConfig = () => {
-      if (formData.platform !== 'Facebook') return null;
-  
-      if (useManualFb) {
-        return (
-          <div className="mt-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex items-center justify-between">
-             <div className="flex items-center gap-2">
-                <MonitorPlay className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Manual Mode</span>
-             </div>
-             <button onClick={() => toggleManualMode(false)} className="text-xs text-[#0866ff] dark:text-[#4e92ff] font-medium hover:underline">
-               Enable Auto-Post
-             </button>
-          </div>
-        );
-      }
-  
-      return (
-        <div className="mt-3 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-lg p-3">
-          <h4 className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-3">
-            <Settings className="w-3.5 h-3.5 text-slate-400" />
-            Facebook Automation
-          </h4>
-  
-          {fbPublishSuccess ? (
-             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-2 text-xs text-green-700 dark:text-green-300 flex items-center gap-2">
-               <Check className="w-3 h-3" /> {fbPublishSuccess}
-               <button onClick={() => setFbPublishSuccess(null)} className="ml-auto underline">Reset</button>
-             </div>
-          ) : (
-            <>
-              {!fbUser ? (
-                <div className="space-y-2">
-                   {needsAppId && (
-                     <div className="bg-white dark:bg-slate-900 p-2 rounded border border-slate-200 dark:border-slate-700">
-                        <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">App ID</label>
-                        <input 
-                          type="text" 
-                          value={customAppId}
-                          onChange={(e) => setCustomAppId(e.target.value)}
-                          placeholder="Meta App ID"
-                          className="w-full text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white rounded py-1 px-2 focus:ring-[#0866ff] focus:border-[#0866ff]"
-                        />
-                     </div>
-                   )}
-                   <button 
-                    onClick={handleFacebookLogin}
-                    disabled={isConnectingFb || (needsAppId && !customAppId)}
-                    className="w-full bg-[#0866ff]/10 hover:bg-[#0866ff]/20 text-[#0866ff] dark:text-[#4e92ff] py-1.5 px-3 rounded-md text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-                   >
-                     {isConnectingFb ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogIn className="w-3 h-3" />}
-                     {needsAppId ? 'Connect App' : 'Login with Facebook'}
-                   </button>
-                   
-                   <div className="text-center">
-                      <button onClick={() => toggleManualMode(true)} className="text-[10px] text-slate-400 hover:text-indigo-500 underline">Switch to Manual</button>
-                   </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                      {fbUser.picture?.data?.url && (
-                          <img src={fbUser.picture.data.url} alt="Profile" className="w-6 h-6 rounded-full" />
-                      )}
-                      <p className="text-xs font-medium text-slate-900 dark:text-white truncate flex-1">As {fbUser.name}</p>
-                  </div>
-                  <div className="relative">
-                     <select 
-                       className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-6 text-xs text-slate-700 dark:text-slate-300"
-                       value={selectedFbPage?.id || ''}
-                       onChange={(e) => {
-                          const page = fbPages.find(p => p.id === e.target.value) || null;
-                          setSelectedFbPage(page);
-                          if (page) {
-                            localStorage.setItem('fb_selected_page_id', page.id);
-                          }
-                       }}
-                     >
-                       {fbPages.map(page => <option key={page.id} value={page.id}>{page.name}</option>)}
-                     </select>
-                     <ChevronDown className="absolute right-2 top-2 w-3 h-3 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-              )}
-              {fbError && <div className="mt-2 text-[10px] text-red-500 bg-red-50 dark:bg-red-900/10 p-1.5 rounded border border-red-100 dark:border-red-900/30">{fbError}</div>}
-            </>
-          )}
-        </div>
-      );
-    };
-
   return (
-    <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden transition-colors duration-300">
-      
-      {/* Toast Notification */}
-      {shareMessage && (
-        <div className="absolute top-4 left-4 right-4 z-50 animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
-           <div className="mx-auto max-w-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
-             <div className="bg-emerald-500 rounded-full p-1 flex-shrink-0">
-               <Check className="w-3 h-3 text-white" />
-             </div>
-             <p className="font-medium text-sm">{shareMessage}</p>
-           </div>
-        </div>
-      )}
-
-      {/* Main Container */}
-      <div className="flex flex-col h-full">
-        
-        {/* Top Bar with Actions */}
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 z-10 flex items-center justify-between">
-           <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300">
-                <PlatformIcon platform={formData.platform} />
+    <div className="space-y-6">
+       {/* 1. Research Summary Card */}
+       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+           <div className="flex items-center gap-2 mb-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+                 <Search className="w-5 h-5" />
               </div>
               <div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Generated Result</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Ready to publish</p>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wide">Research & Context</h3>
+                  <p className="text-xs text-slate-500">Based on real-time search data</p>
               </div>
            </div>
            
-           <div className="flex items-center gap-2">
-              <button onClick={handleCopy} className={`p-2 rounded-lg border transition-all ${copied ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`} title="Copy Text">
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+             <ReactMarkdown>{post.researchSummary}</ReactMarkdown>
+           </div>
+           
+           <div className="flex flex-wrap gap-2 mt-4">
+              {post.sources.map((source, idx) => (
+                  <a 
+                    key={idx} 
+                    href={source.uri} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-1.5 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors border border-indigo-100 dark:border-indigo-800"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span className="truncate max-w-[150px]">{source.title || 'Source'}</span>
+                  </a>
+              ))}
+              <button 
+                onClick={handleCopySources}
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-2 py-1.5 rounded-full transition-colors"
+              >
+                  {sourcesCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {sourcesCopied ? 'Copied' : 'Copy Sources'}
               </button>
-              {renderPrimaryAction()}
            </div>
-        </div>
+       </div>
 
-        {/* Scrollable Preview Area */}
-        <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/30 p-6 md:p-8">
-           
-           {/* Deep Research Context Callout - Enhanced */}
-           {post.researchSummary && (
-              <div className="mb-6 flex items-start gap-4 p-4 bg-white dark:bg-slate-900 border-l-4 border-indigo-500 rounded-r-lg shadow-sm">
-                 <div className="pt-0.5">
-                    <Search className="w-4 h-4 text-indigo-500" />
+       {/* 2. Main Post Preview Card */}
+       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
+          {/* Toolbar */}
+          <div className="border-b border-slate-100 dark:border-slate-800 p-3 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+             <div className="flex items-center gap-2">
+                <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                    {formData.platform}
+                </span>
+                <span className="text-xs text-slate-400">Preview Mode</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setShowSchedule(true)}
+                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                  title="Schedule Post"
+                >
+                    <Calendar className="w-4 h-4" />
+                </button>
+                <div className="h-4 w-px bg-slate-200 dark:border-slate-700"></div>
+                <button 
+                  onClick={() => handleRewrite('Technical')}
+                  disabled={isRewriting}
+                  className="text-[10px] font-medium px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+                >
+                   Make Technical
+                </button>
+                <button 
+                  onClick={() => handleRewrite('General')}
+                  disabled={isRewriting}
+                  className="text-[10px] font-medium px-2 py-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"
+                >
+                   Make Simple
+                </button>
+             </div>
+          </div>
+
+          <div className="p-6">
+             <div className="max-w-2xl mx-auto">
+                 <MockProfileHeader platform={formData.platform} />
+                 
+                 <div className="text-[15px] leading-relaxed whitespace-pre-wrap text-slate-900 dark:text-slate-100 font-normal">
+                     {isRewriting ? (
+                         <div className="space-y-2 animate-pulse">
+                             <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-3/4"></div>
+                             <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full"></div>
+                             <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-5/6"></div>
+                         </div>
+                     ) : (
+                        post.content
+                     )}
                  </div>
-                 <div>
-                    <div className="flex items-center gap-2 mb-1">
-                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Deep Dive Context</span>
-                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                          {post.contentAngle}
-                       </span>
-                    </div>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                       {post.researchSummary}
-                    </p>
-                 </div>
-              </div>
-           )}
 
-           {/* Social Post Preview Card */}
-           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 md:p-8 transition-colors duration-300 max-w-3xl mx-auto">
-              
-              <MockProfileHeader platform={formData.platform} />
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-2">
-                     <RefreshCcw className={`w-3.5 h-3.5 ${isRewriting ? 'animate-spin' : ''}`} />
-                     Rewrite for:
-                  </div>
-                  <button 
-                      onClick={() => handleRewrite('Technical')} 
-                      disabled={isRewriting}
-                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                      <Code className="w-3 h-3" /> Technical
-                  </button>
-                  <button 
-                      onClick={() => handleRewrite('General')} 
-                      disabled={isRewriting}
-                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                      <Users className="w-3 h-3" /> General
-                  </button>
-                  <button 
-                      onClick={() => handleRewrite('Executive')} 
-                      disabled={isRewriting}
-                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                      <Briefcase className="w-3 h-3" /> Executive
-                  </button>
-                  <button 
-                      onClick={() => handleRewrite('System Design')} 
-                      disabled={isRewriting}
-                      className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                      <Layers className="w-3 h-3" /> System Design
-                  </button>
-              </div>
-              
-              {/* Content Body - Refined Typography */}
-              <div className={`prose prose-slate dark:prose-invert max-w-none mb-6
-                    /* Paragraphs */
-                    prose-p:text-base prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-4
-                    /* Headings */
-                    prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:mt-6 prose-headings:mb-3
-                    /* Lists */
-                    prose-ul:my-4 prose-ul:list-disc prose-ul:pl-4
-                    prose-li:text-slate-700 dark:prose-li:text-slate-300 prose-li:my-1.5 prose-li:marker:text-slate-400
-                    /* Links */
-                    prose-a:text-indigo-600 dark:prose-a:text-indigo-400 prose-a:no-underline hover:prose-a:underline
-                    /* Strong */
-                    prose-strong:font-semibold prose-strong:text-slate-900 dark:prose-strong:text-white
-                    /* Blockquotes */
-                    prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400
-                    /* Platform Specific Overrides */
-                    ${formData.platform === 'X (Twitter)' ? 'whitespace-pre-wrap text-[15px] prose-p:my-2 prose-p:leading-normal' : ''}
-                    ${formData.platform === 'LinkedIn' ? 'prose-p:mb-5' : ''}
-                `}>
-                 <ReactMarkdown>
-                    {post.content}
-                 </ReactMarkdown>
-              </div>
-
-              {/* Image Integration */}
-              {post.imageUrl && (
-                 <ImageSection />
-              )}
-              
-              {/* Visual Character Counter */}
-              <CharacterCounter text={post.content} platform={formData.platform} />
-
-              <MockEngagement platform={formData.platform} />
-
-           </div>
-
-           {/* Sources List */}
-           {post.sources.length > 0 && (
-              <div className="mt-8 max-w-3xl mx-auto">
-                 <div className="flex items-center justify-between mb-3 px-1">
-                    <h5 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
-                       <Globe className="w-3.5 h-3.5" /> Sources Cited
-                    </h5>
-                    <button onClick={handleCopySources} className="text-xs font-medium text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-1 transition-colors">
-                       {sourcesCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                       {sourcesCopied ? 'Copied' : 'Copy All'}
+                 {post.imageUrl && <ImageSection />}
+                 <MockEngagement platform={formData.platform} />
+             </div>
+          </div>
+          
+          {/* Footer Actions */}
+          <div className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 p-4">
+             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                 <div className="flex gap-2 w-full sm:w-auto">
+                    <button 
+                        onClick={handleCopy}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium transition-all shadow-sm"
+                    >
+                        {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                        {copied ? 'Copied' : 'Copy Text'}
                     </button>
+                    
+                    {formData.platform === 'Facebook' && (
+                        <>
+                        <div className="relative">
+                            {!selectedFbPage ? (
+                                <button
+                                    onClick={handleFacebookLogin}
+                                    disabled={isConnectingFb}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-70"
+                                >
+                                    {isConnectingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Facebook className="w-4 h-4" />}
+                                    Connect Page
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleDirectFacebookPublish}
+                                    disabled={isPublishingFb}
+                                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-lg text-sm font-medium transition-all shadow-sm disabled:opacity-70"
+                                >
+                                    {isPublishingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                    Publish Now
+                                </button>
+                            )}
+                        </div>
+                        {/* Manual Button */}
+                         <button
+                            onClick={handleManualPost}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium transition-all shadow-sm"
+                            title="Copy text & download image to post manually"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            Post Manually
+                        </button>
+                        </>
+                    )}
                  </div>
-                 <div className="space-y-2">
-                    {post.sources.map((source, idx) => (
-                       <a 
-                         key={idx}
-                         href={source.uri}
-                         target="_blank"
-                         rel="noopener noreferrer" 
-                         className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-600 hover:shadow-sm transition-all group"
-                       >
-                          <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded text-slate-400 group-hover:text-indigo-500 transition-colors">
-                             <ExternalLink className="w-3.5 h-3.5" />
-                          </div>
-                          <span className="text-sm text-slate-600 dark:text-slate-300 truncate flex-1 font-medium">{source.title || source.uri}</span>
-                       </a>
-                    ))}
-                 </div>
-              </div>
-           )}
+                 
+                 <button 
+                    onClick={() => handleSmartShare(formData.platform)}
+                    disabled={isPublishingFb || isConnectingFb}
+                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all ${
+                        formData.platform === 'Facebook' && !useManualFb
+                            ? 'bg-[#1877F2] hover:bg-[#166fe5] text-white' 
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                    }`}
+                 >
+                    {isPublishingFb || isConnectingFb ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                    {formData.platform === 'Facebook' && !useManualFb 
+                        ? (isPublishingFb ? 'Publishing...' : isConnectingFb ? 'Connecting...' : (selectedFbPage ? `Post to ${selectedFbPage.name}` : 'Connect / Auto-Post'))
+                        : 'Share / Open App'
+                    }
+                 </button>
+             </div>
+             
+             {/* Feedback / Validation */}
+             <CharacterCounter text={post.content} platform={formData.platform} />
+             
+             {/* Facebook Status / Errors */}
+             {formData.platform === 'Facebook' && (
+                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
+                     <div className="flex items-center justify-between mb-2">
+                         <span className="font-semibold text-slate-500 uppercase tracking-wide">Facebook Integration</span>
+                         <button onClick={() => toggleManualMode(!useManualFb)} className="text-indigo-600 hover:underline">
+                             {useManualFb ? "Switch to Auto Mode" : "Switch to Manual Mode"}
+                         </button>
+                     </div>
+                     
+                     {useManualFb ? (
+                        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 rounded border border-amber-200 dark:border-amber-800">
+                             Manual Mode: Copy the text and download the image to post manually.
+                        </div>
+                     ) : (
+                         <>
+                            {!needsAppId && !selectedFbPage && (
+                                <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded text-slate-500 flex items-center gap-2">
+                                    <Info className="w-3 h-3" /> Connect a page to publish directly.
+                                </div>
+                            )}
+                            
+                            {selectedFbPage && (
+                                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                    Connected to: <strong>{selectedFbPage.name}</strong>
+                                </div>
+                            )}
 
-        </div>
-        
-        {/* Settings Panel Footer (Facebook) */}
-        {renderFacebookConfig() && (
-           <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-              {renderFacebookConfig()}
+                            {fbPublishSuccess && (
+                                <div className="mt-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded flex items-center gap-2">
+                                    <Check className="w-3 h-3" /> {fbPublishSuccess}
+                                </div>
+                            )}
+
+                            {fbError && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded border border-red-100 dark:border-red-800">
+                                    {fbError}
+                                </div>
+                            )}
+
+                            {needsAppId && (
+                                <div className="mt-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter Facebook App ID" 
+                                        value={customAppId}
+                                        onChange={(e) => setCustomAppId(e.target.value)}
+                                        className="w-full p-2 text-xs border border-slate-300 rounded mb-2 dark:bg-slate-800 dark:border-slate-700"
+                                    />
+                                    <p className="text-[10px] text-slate-400">
+                                        Required for direct publishing. Create an app at <a href="https://developers.facebook.com" target="_blank" className="underline">developers.facebook.com</a>.
+                                    </p>
+                                </div>
+                            )}
+                         </>
+                     )}
+                 </div>
+             )}
+          </div>
+       </div>
+       
+       {/* Share Toast */}
+       {shareMessage && (
+           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4">
+               <div className="bg-slate-900 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+                   <Sparkles className="w-4 h-4 text-amber-400" />
+                   {shareMessage}
+               </div>
            </div>
-        )}
-      </div>
+       )}
+       
+       {/* Schedule Modal */}
+       {showSchedule && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-sm overflow-hidden">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">Schedule Post</h3>
+                    <button onClick={() => setShowSchedule(false)} className="text-slate-400 hover:text-slate-600">
+                        <span className="sr-only">Close</span>
+                        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                    </button>
+                </div>
+                <div className="p-4 space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Date & Time</label>
+                        <input 
+                            type="datetime-local" 
+                            className="w-full p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white"
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                        />
+                    </div>
+                    <p className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                        <Info className="w-3 h-3 inline mr-1" /> 
+                        This is a simulation. In a real app, this would queue your post via an API.
+                    </p>
+                    <button 
+                        onClick={handleConfirmSchedule}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                    >
+                        Confirm Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+       )}
     </div>
   );
 };

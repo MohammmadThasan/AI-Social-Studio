@@ -10,7 +10,7 @@ export type Topic =
   | 'Emerging/Experimental'
   | 'Custom';
 
-export type ImageStyle = 'Minimalist' | 'Photorealistic' | 'Abstract' | 'Cyberpunk' | 'Corporate' | 'Watercolor';
+export type ImageStyle = 'Minimalist' | 'Photorealistic' | 'Abstract' | 'Cyberpunk' | 'Corporate' | 'Watercolor' | '3D Render';
 
 export type Platform = 'LinkedIn' | 'Facebook' | 'X (Twitter)' | 'Instagram' | 'Medium';
 
@@ -43,6 +43,7 @@ export interface GeneratedPost {
   imageUrl?: string;
   sources: GroundingSource[];
   timestamp: number;
+  scheduledFor?: string;   // ISO Date string for scheduled posts
 }
 
 export interface FacebookPage {

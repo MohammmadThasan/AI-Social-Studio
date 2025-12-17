@@ -112,7 +112,7 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
   try {
     // Generate Text
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
@@ -124,12 +124,10 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
     let jsonString = response.text || "{}";
     
     // Robust JSON Extraction
-    // 1. Try to match a markdown code block labeled json
     const codeBlockMatch = jsonString.match(/```json\n([\s\S]*?)\n```/);
     if (codeBlockMatch) {
         jsonString = codeBlockMatch[1];
     } else {
-        // 2. If no code block, try to find the outermost curly braces
         const firstOpen = jsonString.indexOf('{');
         const lastClose = jsonString.lastIndexOf('}');
         if (firstOpen !== -1 && lastClose !== -1 && lastClose > firstOpen) {
@@ -142,8 +140,6 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
         parsedResult = JSON.parse(jsonString);
     } catch (e) {
         console.error("Failed to parse JSON", e);
-        // Fallback: If strict JSON parsing fails, we construct a partial object.
-        // This is a "best effort" recovery if the model output text but messed up the JSON syntax.
         parsedResult = {
             researchSummary: "Analysis complete (JSON parse error).",
             contentAngle: "General",
@@ -152,7 +148,6 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
         };
     }
     
-    // Extract grounding metadata (sources)
     const sources: GroundingSource[] = [];
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     
@@ -208,12 +203,11 @@ export const rewritePost = async (
     1. **Preserve Insight**: Keep the original core facts and research. Do not hallucinate new data.
     2. **HUMANIZE (CRITICAL)**: Remove all robotic phrasing ("In the realm of", "It is crucial"). Use contractions, direct address ("You"), and variable sentence structure. Sound like a person, not a PR release.
     3. **Tone Specifics**:
-       - If 'Technical': Use precise engineering terminology (e.g., "latency", "vector embeddings"). Assume the reader is a developer.
-       - If 'General' (Non-Technical): Use simple analogies. Explain "why it matters" rather than "how it works".
-       - If 'Executive': Focus on ROI, strategic advantage.
-       - If 'System Design': Focus on architectural patterns and productive workflows. Use a learning/informative tone.
-    4. **Platform Optimization**: Strictly adhere to character limits and formatting for ${platform}.
-    5. **Output**: Return ONLY the rewritten post text in Markdown. Do not include introductory text.
+       - If 'Technical': Use precise engineering terminology.
+       - If 'General': Use simple analogies.
+       - If 'Executive': Focus on ROI.
+    4. **Platform Optimization**: Adhere to character limits for ${platform}.
+    5. **Output**: Return ONLY the rewritten post text.
 
     ORIGINAL CONTENT:
     ${content}
@@ -221,7 +215,7 @@ export const rewritePost = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         temperature: 0.7, 
@@ -237,7 +231,7 @@ export const rewritePost = async (
 
 export const generatePostImage = async (
   data: FormData, 
-  style: ImageStyle = 'Minimalist',
+  style: ImageStyle = '3D Render',
   manualAspectRatio?: string,
   manualPrompt?: string
 ): Promise<string | undefined> => {
@@ -251,30 +245,27 @@ export const generatePostImage = async (
     switch (data.platform) {
         case 'Instagram': aspectRatio = "1:1"; break;
         case 'Facebook': aspectRatio = "4:3"; break;
-        case 'X (Twitter)': aspectRatio = "16:9"; break;
-        case 'Medium': aspectRatio = "16:9"; break;
-        case 'LinkedIn': aspectRatio = "16:9"; break;
         default: aspectRatio = "16:9";
     }
   }
 
+  // Define quality-boosting prompt suffixes for different styles
+  const styleModifiers: Record<string, string> = {
+    '3D Render': "highly detailed 3D render, Unreal Engine 5 style, Octane Render, 8k resolution, volumetric lighting, ray tracing, sharp focus, clean clay or gloss materials, cinematic composition, professional 3D art, masterpiece.",
+    'Photorealistic': "professional commercial photography, high-end DSLR, 8k resolution, sharp focus, realistic textures, natural lighting, depth of field, hyper-realistic, high detail.",
+    'Minimalist': "clean vector art, flat design, minimalist aesthetic, simple shapes, pastel colors, white space, professional logo style.",
+    'Abstract': "experimental digital art, complex geometry, fluid motion, vibrant gradients, conceptual visualization, high contrast.",
+    'Cyberpunk': "neon lighting, futuristic cityscape, glow effects, tech-noir aesthetic, cyan and magenta color palette, high-tech details.",
+    'Corporate': "clean professional illustration, modern corporate art, business tech aesthetic, blue and gray tones, workspace visualization."
+  };
+
+  const modifier = styleModifiers[style] || styleModifiers['3D Render'];
+
   let imagePrompt = '';
   if (manualPrompt && manualPrompt.trim().length > 0) {
-      imagePrompt = `
-        Create a digital illustration based on this description: "${manualPrompt}".
-        Style: ${style} art style.
-        Mood: ${data.tone}.
-        Aspect Ratio: ${aspectRatio}.
-        Important: Do not include any text or words inside the image.
-      `;
+      imagePrompt = `Create a visually stunning image based on: "${manualPrompt}". Style: ${modifier} Important: No text, words, or letters in the image.`;
   } else {
-      imagePrompt = `
-        Create a professional, modern, high-quality digital illustration suitable for a ${data.platform} post about: "${topicToUse}".
-        Style: ${style} art style. 
-        Mood: ${data.tone}. 
-        Aspect Ratio: ${aspectRatio}. 
-        Important: Do not include any text or words inside the image.
-      `;
+      imagePrompt = `Create a high-quality, professional digital illustration for a ${data.platform} post about: "${topicToUse}". Style: ${modifier} Visual elements should represent the theme of ${data.tone}. Important: No text or typography allowed.`;
   }
 
   try {

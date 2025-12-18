@@ -48,20 +48,3 @@ export interface GeneratedPost {
   timestamp: number;
   scheduledFor?: string;
 }
-
-export interface FacebookPage {
-  id: string;
-  name: string;
-  access_token: string;
-  category?: string;
-}
-
-export interface FacebookUser {
-  id: string;
-  name: string;
-  picture?: {
-    data: {
-      url: string;
-    }
-  };
-}

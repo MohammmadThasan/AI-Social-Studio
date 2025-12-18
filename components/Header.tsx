@@ -23,11 +23,6 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="hidden sm:flex items-center space-x-2 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-full border border-amber-100 dark:border-amber-800/50">
-             <Sparkles className="w-3 h-3" />
-             <span>Gemini 3 Pro Enabled</span>
-          </div>
-
           <button 
             onClick={toggleTheme} 
             className="p-2 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all focus:outline-none"

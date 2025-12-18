@@ -106,7 +106,15 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
 
     let jsonString = response.text || "{}";
     const codeBlockMatch = jsonString.match(/```json\n([\s\S]*?)\n```/);
-    if (codeBlockMatch) jsonString = codeBlockMatch[1];
+    if (codeBlockMatch) {
+      jsonString = codeBlockMatch[1];
+    } else {
+      const firstOpen = jsonString.indexOf('{');
+      const lastClose = jsonString.lastIndexOf('}');
+      if (firstOpen !== -1 && lastClose !== -1) {
+        jsonString = jsonString.substring(firstOpen, lastClose + 1);
+      }
+    }
 
     let parsedResult;
     try {
@@ -132,7 +140,8 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
 
     let finalContent = parsedResult.postContent;
     if (data.includeHashtags && parsedResult.hashtags?.length > 0) {
-        finalContent += `\n\n${parsedResult.hashtags.map((t: string) => t.startsWith('#') ? t : `#${t}`).join(' ')}`;
+        const hashtags = parsedResult.hashtags.map((t: string) => t.startsWith('#') ? t : `#${t}`).join(' ');
+        finalContent += `\n\n${hashtags}`;
     }
 
     return {
@@ -145,7 +154,7 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
     };
   } catch (error: any) {
     if (error.message?.includes("Requested entity was not found")) {
-        throw new Error("PRO_KEY_REQUIRED");
+        throw new Error("API_LIMIT_REACHED");
     }
     throw error;
   }
@@ -176,15 +185,10 @@ export const generatePostImage = async (data: FormData, style: ImageStyle = '3D 
   const imagePrompt = manualPrompt || `Stunning visual for AI Analytics: ${topicToUse}. ${modifier}. No text.`;
 
   try {
+    // Using gemini-2.5-flash-image to avoid mandatory pre-selection of API key
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.5-flash-image',
       contents: { parts: [{ text: imagePrompt }] },
-      config: {
-        imageConfig: {
-          aspectRatio: manualAspectRatio || (data.platform === 'Instagram' ? "1:1" : "16:9"),
-          imageSize: "1K"
-        }
-      },
     });
 
     for (const part of response.candidates?.[0]?.content?.parts || []) {
@@ -192,9 +196,6 @@ export const generatePostImage = async (data: FormData, style: ImageStyle = '3D 
     }
     return undefined;
   } catch (error: any) {
-    if (error.message?.includes("Requested entity was not found")) {
-        throw new Error("PRO_KEY_REQUIRED");
-    }
     return undefined; 
   }
 };

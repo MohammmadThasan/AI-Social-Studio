@@ -56,7 +56,7 @@ const CharacterCounter: React.FC<{ text: string; platform: Platform }> = ({ text
 };
 
 const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formData, onImageUpdate, onContentUpdate }) => {
-  const [isRewriting, setIsRewriting] = useState(false);
+  const [rewritingTarget, setRewritingTarget] = useState<'Expert' | 'Broad' | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [publishingPlatform, setPublishingPlatform] = useState<Platform | null>(null);
@@ -154,13 +154,13 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
     }, 1000);
   };
 
-  const handleRewrite = async (audience: string) => {
-      if (!post || isRewriting) return;
-      setIsRewriting(true);
+  const handleRewrite = async (audience: string, target: 'Expert' | 'Broad') => {
+      if (!post || rewritingTarget) return;
+      setRewritingTarget(target);
       try {
           const newContent = await rewritePost(post.content, formData.platform, audience);
           onContentUpdate(newContent);
-      } catch (e) { console.error(e); } finally { setIsRewriting(false); }
+      } catch (e) { console.error(e); } finally { setRewritingTarget(null); }
   };
 
   if (isLoading) {
@@ -264,19 +264,27 @@ const PostResult: React.FC<PostResultProps> = ({ post, isLoading, error, formDat
              </div>
              <div className="flex gap-2">
                 <button 
-                  onClick={() => handleRewrite('Technical')} 
-                  disabled={isRewriting} 
-                  className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-sm transition-all disabled:opacity-50 flex items-center gap-1"
+                  onClick={() => handleRewrite('Technical', 'Expert')} 
+                  disabled={!!rewritingTarget} 
+                  className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${
+                      rewritingTarget === 'Expert' 
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-900 dark:text-indigo-300' 
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-sm disabled:opacity-50'
+                  }`}
                 >
-                  {isRewriting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Code className="w-3 h-3" />}
+                  {rewritingTarget === 'Expert' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Code className="w-3 h-3" />}
                   Expert Perspective
                 </button>
                 <button 
-                  onClick={() => handleRewrite('Simple')} 
-                  disabled={isRewriting} 
-                  className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-sm transition-all disabled:opacity-50 flex items-center gap-1"
+                  onClick={() => handleRewrite('Simple', 'Broad')} 
+                  disabled={!!rewritingTarget} 
+                  className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1 ${
+                      rewritingTarget === 'Broad' 
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/30 dark:border-emerald-900 dark:text-emerald-300' 
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:shadow-sm disabled:opacity-50'
+                  }`}
                 >
-                  {isRewriting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Users className="w-3 h-3" />}
+                  {rewritingTarget === 'Broad' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Users className="w-3 h-3" />}
                   Broad Audience
                 </button>
              </div>

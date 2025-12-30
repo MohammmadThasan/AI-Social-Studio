@@ -18,15 +18,15 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
     case 'LinkedIn':
       platformStrategy = `
         Constraint: LinkedIn Authority
-        - STYLE: Punchy, first-person expert. 
-        - STRUCTURE: Hook (scrolling stopper) followed by insight-driven value.
+        - STYLE: Punchy, first-person expert. A mix of short and long sentences.
+        - STRUCTURE: Hook (scrolling stopper) -> The Problem -> The Data -> The Solution -> The Takeaway.
         - FORMAT: White space between lines. NO ASTERISKS.
       `;
       break;
     case 'X (Twitter)':
       platformStrategy = `
         Constraint: X/Twitter Post
-        - STYLE: Direct, news-like, or high-value tip.
+        - STYLE: Direct, news-like, or high-value tip. Thread-starter style.
         - FORMAT: NO ASTERISKS.
       `;
       break;
@@ -35,28 +35,37 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
   }
 
   const prompt = `
-    PHASE 1: DEEP WEB & SOCIAL SEARCH
-    1. Search the deep web for technical implementations of "${topicToUse}" from the last 7 days.
-    2. Search social media (X, LinkedIn discussions) to find contrarian views or what people are actually complaining about/praising regarding "${topicToUse}".
-    3. Look for specific metrics: benchmarks, cost comparisons, or deployment hurdles.
+    GOAL: Write a high-viral, authoritative ${platform} post about "${topicToUse}".
 
-    PHASE 2: SYNTHESIS
-    Identify a "hidden truth" that generic AI summaries miss. This is your "Gap Analysis."
+    STEP 1: DEEP RESEARCH (The "Truth" Phase)
+    - Search for specific, hard data points from the last 3-6 months. Look for benchmarks, costs, latency numbers, or adoption rates.
+    - Find a "Counter-Narrative": What is the common advice/hype that is actually wrong or misleading?
+    - Find a real-world example: A company or tool that succeeded or failed recently.
+    - VERIFY: Ensure all dates and numbers are accurate.
 
-    PHASE 3: DRAFTING
-    Write a ${platform} post based on this research.
-    - Perspective: ${data.tone}.
-    - RULE: ABSOLUTELY NO ASTERISKS (*). Use plain text structure.
-    
-    ${data.comparisonFormat ? '- Use a "Then vs. Now" comparison.' : ''}
+    STEP 2: SYNTHESIS (The "Insight" Phase)
+    - Combine the hard data with the counter-narrative.
+    - Ask: "Why does this matter to a senior practitioner right now?"
+    - Formulate a strong opinion. Don't hedge. Be decisive.
+
+    STEP 3: DRAFTING (The "Human" Phase)
+    - Tone: ${data.tone}.
+    - Style: Short, punchy sentences. Variable rhythm. No fluff. Write as if arguing with a smart peer.
+    - Hook: Start with a startling fact, a direct question, or a contrarian statement.
+    - Body: Deliver value immediately. Use the data from Step 1.
+    - Conclusion: End with a specific question or call to action.
+    - CONSTRAINT: ABSOLUTELY NO ASTERISKS (*).
+    - CONSTRAINT: Do NOT use forbidden words (delve, unlock, landscape, revolutionary, etc.).
+
+    ${data.comparisonFormat ? '- Structure: Compare "The Old Way" vs "The New Reality".' : ''}
     ${data.includeCTA ? '- End with a high-engagement question.' : ''}
-    ${data.includeDevilsAdvocate ? '- Mention a legitimate reason to be skeptical.' : ''}
+    ${data.includeDevilsAdvocate ? '- Explicitly mention the downsides/risks/costs.' : ''}
     ${data.includeEmoji ? '- Use minimal, high-quality emojis.' : '- NO emojis.'}
 
     Return JSON:
     {
-      "researchSummary": "A data-heavy summary of your deep web and social media findings. NO ASTERISKS.",
-      "contentAngle": "The unique hook.",
+      "researchSummary": "A data-heavy summary of your deep web and social media findings. Cite specific numbers and dates. NO ASTERISKS.",
+      "contentAngle": "The unique, contrarian, or data-backed hook you chose.",
       "postContent": "The final post. NO ASTERISKS.",
       "hashtags": ["#tag1", "#tag2"]
     }
@@ -129,12 +138,28 @@ export const generateSocialPost = async (data: FormData): Promise<GeneratedPost>
 
 export const rewritePost = async (content: string, platform: string, audience: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const prompt = `Rewrite this ${platform} post for a ${audience} audience. Sound like a human peer. STRICTLY NO ASTERISKS (*). Original: ${content}`;
+  
+  let instruction = "";
+  if (audience === 'Technical') {
+      instruction = "Make it more rigorous. Focus on architectural patterns, latency, cost per token, and trade-offs. Assume the reader is a Principal Engineer. Remove marketing fluff.";
+  } else if (audience === 'Simple') {
+      instruction = "Explain it like I'm 12, but don't be patronizing. Use a clear analogy (like comparing AI to a library or a chef). Focus on the 'why' and the benefit. Use short sentences.";
+  }
+
+  const prompt = `
+    Rewrite this ${platform} post for a ${audience} audience. 
+    ${instruction} 
+    STRICTLY NO ASTERISKS (*). 
+    Do not use the words 'delve' or 'unlock'.
+    Keep the core facts accurate. 
+    Original: ${content}
+  `;
+  
   const response = await ai.models.generateContent({ 
     model: "gemini-3-pro-preview", 
     contents: prompt,
     config: { 
-      systemInstruction: "You are a senior technical writer. ABSOLUTELY NO ASTERISKS (*) ALLOWED.",
+      systemInstruction: "You are a senior technical editor. Your goal is clarity and impact. ABSOLUTELY NO ASTERISKS (*) ALLOWED.",
       thinkingConfig: { thinkingBudget: 4000 } 
     } 
   });
